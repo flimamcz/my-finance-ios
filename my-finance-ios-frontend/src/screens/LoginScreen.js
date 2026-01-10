@@ -21,29 +21,35 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin() {
-    if (!email || !password) {
-      Alert.alert("Erro", "Informe email e senha");
+async function handleLogin() {
+  if (!email || !password) {
+    Alert.alert("Erro", "Informe email e senha");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const data = await loginRequest(email, password);
+
+    console.log("LOGIN RESPONSE:", data);
+
+    // ✅ checagem do backend
+    if (data.error) {
+      Alert.alert("Erro", data.message || "Login inválido");
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const data = await loginRequest(email, password);
-
-      console.log("LOGIN OK:", data);
-
-      navigation.replace("Home");
-    } catch (error) {
-      console.log("LOGIN ERROR:", error?.response?.data || error.message);
-      Alert.alert("Erro", "Login inválido");
-    } finally {
-      setLoading(false);
-    }
-    const session = await getSession();
-    console.log("SESSION:", session);
+    // ✅ login ok → navega pra Home
+    navigation.replace("Home");
+  } catch (error) {
+    console.log("LOGIN ERROR:", error?.response?.data || error.message);
+    Alert.alert("Falha no login", "Verifique suas credenciais");
+  } finally {
+    setLoading(false);
   }
+}
+
 
   return (
     <LinearGradient
