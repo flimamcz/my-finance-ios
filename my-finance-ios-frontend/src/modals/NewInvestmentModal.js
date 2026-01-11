@@ -17,13 +17,21 @@ import { colors } from "../theme/colors";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { createTransaction } from "../services/transaction";
 
-export default function NewIncomeModal({ visible, onClose, onSuccess }) {
+export default function NewInvestmentModal({ visible, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     value: "",
     description: "",
-    date: new Date().toISOString().split("T")[0], 
+    date: new Date().toISOString().split("T")[0],
+    investmentType: "renda_fixa", 
   });
+
+  const investmentTypes = [
+    { id: "renda_fixa", label: "Renda Fixa", icon: "📊", color: "#3b82f6" },
+    { id: "renda_variavel", label: "Renda Variável", icon: "📈", color: "#8b5cf6" },
+    { id: "cripto", label: "Criptomoedas", icon: "₿", color: "#f59e0b" },
+    { id: "fundo", label: "Fundos", icon: "🏦", color: "#10b981" },
+  ];
 
   const handleInputChange = (field, value) => {
     setFormData({
@@ -53,14 +61,24 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
     return formData.value.replace(",", ".");
   };
 
+  const getInvestmentTypeLabel = (typeId) => {
+    const type = investmentTypes.find(t => t.id === typeId);
+    return type ? type.label : "Outro";
+  };
+
+  const getInvestmentTypeColor = (typeId) => {
+    const type = investmentTypes.find(t => t.id === typeId);
+    return type ? type.color : colors.primary;
+  };
+
   const handleSubmit = async () => {
     if (!formData.value || parseFloat(getNumericValue()) <= 0) {
-      Alert.alert("Erro", "Informe um valor válido para a receita");
+      Alert.alert("Erro", "Informe um valor válido para o investimento");
       return;
     }
 
     if (!formData.description.trim()) {
-      Alert.alert("Erro", "Informe uma descrição para a receita");
+      Alert.alert("Erro", "Informe uma descrição para o investimento");
       return;
     }
 
@@ -69,40 +87,40 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
 
       const transactionData = {
         value: getNumericValue(),
-        typeId: 1, 
-        description: formData.description.trim(),
+        typeId: 3, 
+        description: `${getInvestmentTypeLabel(formData.investmentType)} - ${formData.description.trim()}`,
         date: formData.date,
-        status: true, 
+        status: true,
       };
 
-      console.log("📤 Enviando nova receita:", transactionData);
+      console.log("📤 Enviando novo investimento:", transactionData);
 
       const response = await createTransaction(transactionData);
 
       if (response.error) {
-        Alert.alert("Erro", response.message || "Não foi possível criar a receita");
+        Alert.alert("Erro", response.message || "Não foi possível criar o investimento");
         return;
       }
 
       Alert.alert(
-        "Sucesso!",
-        "Receita adicionada com sucesso!",
+        "Investimento realizado!",
+        "Seu investimento foi registrado com sucesso! 🚀",
         [
           {
-            text: "OK",
+            text: "Ver detalhes",
             onPress: () => {
               resetForm();
-              onSuccess();
+              onSuccess(); 
             },
           },
         ]
       );
 
     } catch (error) {
-      console.error("Erro ao criar receita:", error);
+      console.error("Erro ao criar investimento:", error);
       Alert.alert(
         "Erro",
-        error.response?.data?.message || "Erro ao salvar receita. Tente novamente."
+        error.response?.data?.message || "Erro ao registrar investimento. Tente novamente."
       );
     } finally {
       setLoading(false);
@@ -114,6 +132,7 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
       value: "",
       description: "",
       date: new Date().toISOString().split("T")[0],
+      investmentType: "renda_fixa",
     });
   };
 
@@ -121,6 +140,11 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
     resetForm();
     onClose();
   };
+
+  const investmentSuggestions = [
+    "Tesouro Direto", "CDB", "LCI/LCA", "Ações", 
+    "FIIs", "ETF", "Bitcoin", "Poupança"
+  ];
 
   return (
     <Modal
@@ -138,15 +162,14 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
           style={styles.modalBackground}
         >
           <View style={styles.modalContainer}>
-            {/* HEADER DO MODAL */}
             <View style={styles.modalHeader}>
               <View style={styles.headerTitleContainer}>
-                <View style={[styles.iconContainer, { backgroundColor: "#22c55e20" }]}>
-                  <MaterialIcons name="attach-money" size={24} color={colors.success} />
+                <View style={[styles.iconContainer, { backgroundColor: "#6366f120" }]}>
+                  <FontAwesome5 name="chart-line" size={20} color={colors.primary} />
                 </View>
                 <View>
-                  <Text style={styles.modalTitle}>Nova Receita</Text>
-                  <Text style={styles.modalSubtitle}>Adicione uma nova entrada</Text>
+                  <Text style={styles.modalTitle}>Novo Investimento</Text>
+                  <Text style={styles.modalSubtitle}>Invista no seu futuro</Text>
                 </View>
               </View>
               
@@ -159,11 +182,9 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
               style={styles.modalContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* CARD DO FORMULÁRIO */}
               <View style={styles.formCard}>
-                {/* VALOR */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Valor (R$)</Text>
+                  <Text style={styles.inputLabel}>Valor do Investimento (R$)</Text>
                   <View style={styles.valueInputContainer}>
                     <Text style={styles.currencySymbol}>R$</Text>
                     <TextInput
@@ -176,14 +197,56 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
                       editable={!loading}
                     />
                   </View>
+                  <Text style={styles.valueHint}>
+                    Recomendado: 10-20% da sua renda mensal
+                  </Text>
                 </View>
 
-                {/* DESCRIÇÃO */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Descrição</Text>
+                  <Text style={styles.inputLabel}>Tipo de Investimento</Text>
+                  <View style={styles.investmentTypesGrid}>
+                    {investmentTypes.map((type) => (
+                      <TouchableOpacity
+                        key={type.id}
+                        style={[
+                          styles.investmentTypeCard,
+                          formData.investmentType === type.id && styles.investmentTypeCardSelected,
+                          { borderColor: formData.investmentType === type.id ? type.color : colors.border }
+                        ]}
+                        onPress={() => handleInputChange("investmentType", type.id)}
+                      >
+                        <Text style={{ fontSize: 24, marginBottom: 8 }}>{type.icon}</Text>
+                        <Text style={[
+                          styles.investmentTypeLabel,
+                          formData.investmentType === type.id && { color: type.color, fontWeight: '700' }
+                        ]}>
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Sugestões de ativos</Text>
+                  <View style={styles.suggestionsContainer}>
+                    {investmentSuggestions.map((suggestion, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.suggestionChip}
+                        onPress={() => handleInputChange("description", suggestion)}
+                      >
+                        <Text style={styles.suggestionText}>{suggestion}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Ativo específico</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Ex: Salário, Freelance, Venda..."
+                    placeholder="Ex: CDB Banco XYZ 110% CDI, Ações PETR4..."
                     placeholderTextColor={colors.textSecondary + "80"}
                     value={formData.description}
                     onChangeText={(text) => handleInputChange("description", text)}
@@ -196,9 +259,8 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
                   </Text>
                 </View>
 
-                {/* DATA */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Data</Text>
+                  <Text style={styles.inputLabel}>Data da aplicação</Text>
                   <View style={styles.dateContainer}>
                     <MaterialIcons name="calendar-today" size={20} color={colors.primary} />
                     <Text style={styles.dateText}>
@@ -210,77 +272,85 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
                       })}
                     </Text>
                   </View>
-                  <Text style={styles.dateHint}>
-                    Data atual selecionada automaticamente
-                  </Text>
                 </View>
 
-                {/* CATEGORIA (Futura implementação) */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Categoria (Opcional)</Text>
-                  <TouchableOpacity 
-                    style={styles.categoryButton}
-                    disabled={true}
-                  >
-                    <Text style={styles.categoryButtonText}>Selecionar categoria</Text>
-                    <MaterialIcons name="arrow-forward-ios" size={16} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                  <Text style={styles.hintText}>
-                    Categorias em breve disponíveis
-                  </Text>
-                </View>
-
-                {/* NOTAS (Opcional) */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Notas (Opcional)</Text>
+                  <Text style={styles.inputLabel}>Objetivo (Opcional)</Text>
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="Adicione observações, detalhes..."
+                    placeholder="Ex: Reserva de emergência, Aposentadoria..."
                     placeholderTextColor={colors.textSecondary + "80"}
                     multiline
-                    numberOfLines={3}
+                    numberOfLines={2}
                     editable={!loading}
                   />
                 </View>
+
+                {/* PERFIL DE RISCO (Placeholder) */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Perfil de risco</Text>
+                  <TouchableOpacity 
+                    style={styles.riskButton}
+                    disabled={true}
+                  >
+                    <View style={styles.riskIndicator}>
+                      <View style={[styles.riskDot, { backgroundColor: '#22c55e' }]} />
+                      <View style={[styles.riskDot, { backgroundColor: '#f59e0b' }]} />
+                      <View style={[styles.riskDot, { backgroundColor: colors.border }]} />
+                      <View style={[styles.riskDot, { backgroundColor: colors.border }]} />
+                      <View style={[styles.riskDot, { backgroundColor: colors.border }]} />
+                    </View>
+                    <Text style={styles.riskButtonText}>Moderado</Text>
+                    <MaterialIcons name="arrow-forward-ios" size={16} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* RECIBO PREVIEW */}
-              <View style={styles.receiptPreview}>
-                <Text style={styles.receiptTitle}>📋 Resumo da Receita</Text>
+              {/* PREVISÃO DE RETORNO (Estimativa) */}
+              <View style={styles.returnEstimate}>
+                <Text style={styles.returnTitle}>📊 Estimativa de Retorno</Text>
                 
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Valor:</Text>
-                  <Text style={[styles.receiptValue, { color: colors.success }]}>
+                <View style={styles.returnRow}>
+                  <Text style={styles.returnLabel}>Valor investido:</Text>
+                  <Text style={styles.returnValue}>
                     {formData.value ? `R$ ${formData.value}` : "R$ 0,00"}
                   </Text>
                 </View>
                 
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Descrição:</Text>
-                  <Text style={styles.receiptValue} numberOfLines={2}>
-                    {formData.description || "Não informada"}
+                <View style={styles.returnRow}>
+                  <Text style={styles.returnLabel}>Em 1 ano (8% a.a):</Text>
+                  <Text style={[styles.returnValue, { color: colors.success }]}>
+                    {formData.value ? 
+                      `R$ ${(parseFloat(getNumericValue()) * 1.08).toFixed(2).replace('.', ',')}` : 
+                      "R$ 0,00"}
                   </Text>
                 </View>
                 
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Data:</Text>
-                  <Text style={styles.receiptValue}>
-                    {new Date(formData.date).toLocaleDateString("pt-BR")}
+                <View style={styles.returnRow}>
+                  <Text style={styles.returnLabel}>Em 5 anos (8% a.a):</Text>
+                  <Text style={[styles.returnValue, { color: colors.success }]}>
+                    {formData.value ? 
+                      `R$ ${(parseFloat(getNumericValue()) * Math.pow(1.08, 5)).toFixed(2).replace('.', ',')}` : 
+                      "R$ 0,00"}
                   </Text>
                 </View>
                 
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Tipo:</Text>
-                  <View style={[styles.typeBadge, { backgroundColor: "#22c55e20" }]}>
-                    <Text style={[styles.typeBadgeText, { color: colors.success }]}>
-                      RECEITA
-                    </Text>
-                  </View>
+                <View style={styles.returnNote}>
+                  <MaterialIcons name="info" size={14} color={colors.textSecondary} />
+                  <Text style={styles.returnNoteText}>
+                    * Estimativa baseada em retorno médio histórico
+                  </Text>
                 </View>
+              </View>
+
+              <View style={styles.tipContainer}>
+                <MaterialIcons name="lightbulb" size={20} color="#f59e0b" />
+                <Text style={styles.tipText}>
+                  Invista regularmente (DCA) e mantenha um horizonte de longo prazo para melhores resultados.
+                </Text>
               </View>
             </ScrollView>
 
-            {/* FOOTER DO MODAL */}
             <View style={styles.modalFooter}>
               <TouchableOpacity 
                 style={styles.cancelButton}
@@ -302,8 +372,8 @@ export default function NewIncomeModal({ visible, onClose, onSuccess }) {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <>
-                    <MaterialIcons name="check" size={20} color="#fff" />
-                    <Text style={styles.submitButtonText}>Adicionar Receita</Text>
+                    <FontAwesome5 name="chart-line" size={16} color="#fff" />
+                    <Text style={styles.submitButtonText}>Investir Agora</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -395,7 +465,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: colors.success + "40",
+    borderColor: colors.primary + "40",
     borderRadius: 16,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
@@ -403,15 +473,44 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 24,
     fontWeight: "700",
-    color: colors.success,
+    color: colors.primary,
     marginRight: 8,
   },
   valueInput: {
     flex: 1,
     fontSize: 32,
     fontWeight: "700",
-    color: colors.success,
+    color: colors.primary,
     paddingVertical: 12,
+  },
+  valueHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 6,
+    fontStyle: "italic",
+  },
+  investmentTypesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  investmentTypeCard: {
+    width: "48%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  investmentTypeCardSelected: {
+    backgroundColor: "#eff6ff",
+  },
+  investmentTypeLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+    textAlign: "center",
   },
   input: {
     borderWidth: 1,
@@ -423,7 +522,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   textArea: {
-    minHeight: 80,
+    minHeight: 60,
     textAlignVertical: "top",
   },
   charCount: {
@@ -431,6 +530,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "right",
     marginTop: 4,
+  },
+  suggestionsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  suggestionChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: colors.border,
+    borderRadius: 20,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: colors.textPrimary,
   },
   dateContainer: {
     flexDirection: "row",
@@ -447,13 +561,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: "500",
   },
-  dateHint: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 6,
-    fontStyle: "italic",
-  },
-  categoryButton: {
+  riskButton: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -463,31 +571,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  categoryButtonText: {
+  riskIndicator: {
+    flexDirection: "row",
+    gap: 4,
+    alignItems: "center",
+  },
+  riskDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  riskButtonText: {
     fontSize: 16,
     color: colors.textPrimary,
+    marginLeft: 12,
   },
-  hintText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 6,
-    fontStyle: "italic",
-  },
-  receiptPreview: {
+  returnEstimate: {
     backgroundColor: colors.card,
     borderRadius: 20,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  receiptTitle: {
+  returnTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.textPrimary,
     marginBottom: 16,
   },
-  receiptRow: {
+  returnRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -495,26 +608,48 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border + "40",
   },
-  receiptLabel: {
+  returnLabel: {
     fontSize: 14,
     color: colors.textSecondary,
     flex: 1,
   },
-  receiptValue: {
+  returnValue: {
     fontSize: 14,
     fontWeight: "600",
     color: colors.textPrimary,
     flex: 2,
     textAlign: "right",
   },
-  typeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+  returnNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  typeBadgeText: {
+  returnNoteText: {
     fontSize: 12,
-    fontWeight: "700",
+    color: colors.textSecondary,
+    fontStyle: "italic",
+  },
+  tipContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#eff6ff",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#3b82f630",
+    marginBottom: 24,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.primary,
+    lineHeight: 20,
   },
   modalFooter: {
     flexDirection: "row",
@@ -544,10 +679,10 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 18,
     borderRadius: 14,
-    backgroundColor: colors.success,
+    backgroundColor: colors.primary,
   },
   submitButtonDisabled: {
-    backgroundColor: colors.success + "80",
+    backgroundColor: colors.primary + "80",
   },
   submitButtonText: {
     fontSize: 16,

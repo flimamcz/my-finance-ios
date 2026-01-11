@@ -1,4 +1,5 @@
-// screens/HomeScreen.js - VERSÃO CORRIGIDA E COMPLETA
+// screens/HomeScreen.js - VERSÃO FINAL CORRIGIDA
+import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,7 +10,6 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../theme/colors";
@@ -20,6 +20,8 @@ import { clearSession } from "../services/session";
 
 import NewIncomeModal from "../modals/NewIncomeModal";
 import NewExpenseModal from "../modals/NewExpenseModal";
+import NewInvestmentModal from "../modals/NewInvestmentModal";
+import TransactionDetailsModal from "../modals/TransactionDetailsModal";
 
 export default function HomeScreen({ navigation }) {
   // ESTADOS
@@ -33,9 +35,13 @@ export default function HomeScreen({ navigation }) {
     investments: "0.00",
   });
 
-  // ✅ CORREÇÃO: Estado do modal DENTRO do componente
+  // ESTADOS DOS MODAIS
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showInvestmentModal, setShowInvestmentModal] = useState(false);
+
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // CARREGAR DADOS DA API
   const loadData = async () => {
@@ -230,6 +236,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.sectionTitle}>Ações Rápidas</Text>
 
             <View style={styles.actionsGrid}>
+              {/* NOVA RECEITA */}
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => setShowIncomeModal(true)}
@@ -245,6 +252,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.actionText}>Nova Receita</Text>
               </TouchableOpacity>
 
+              {/* NOVA DESPESA */}
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => setShowExpenseModal(true)}
@@ -264,7 +272,11 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.actionText}>Nova Despesa</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionCard}>
+              {/* NOVO INVESTIMENTO */}
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => setShowInvestmentModal(true)}
+              >
                 <View
                   style={[
                     styles.actionIcon,
@@ -280,6 +292,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.actionText}>Investir</Text>
               </TouchableOpacity>
 
+              {/* RELATÓRIOS (Placeholder) */}
               <TouchableOpacity style={styles.actionCard}>
                 <View
                   style={[
@@ -302,7 +315,9 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.transactionsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Transações Recentes</Text>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("AllTransactions")}
+              >
                 <Text style={styles.seeAll}>Ver todas</Text>
               </TouchableOpacity>
             </View>
@@ -326,6 +341,10 @@ export default function HomeScreen({ navigation }) {
                 <TouchableOpacity
                   key={transaction.id}
                   style={styles.transactionCard}
+                  onPress={() => {
+                    setSelectedTransaction(transaction);
+                    setShowDetailsModal(true);
+                  }}
                 >
                   <View style={styles.transactionLeft}>
                     <View
@@ -392,7 +411,6 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.spacer} />
         </ScrollView>
       </LinearGradient>
-
       {/* MODAL DE NOVA RECEITA */}
       <NewIncomeModal
         visible={showIncomeModal}
@@ -402,13 +420,35 @@ export default function HomeScreen({ navigation }) {
           loadData(); // Recarrega as transações
         }}
       />
-
+      {/* MODAL DE NOVA DESPESA */}
       <NewExpenseModal
         visible={showExpenseModal}
         onClose={() => setShowExpenseModal(false)}
         onSuccess={() => {
           setShowExpenseModal(false);
           loadData(); // Recarrega as transações
+        }}
+      />
+      {/* MODAL DE NOVO INVESTIMENTO */}
+      <NewInvestmentModal
+        visible={showInvestmentModal}
+        onClose={() => setShowInvestmentModal(false)}
+        onSuccess={() => {
+          setShowInvestmentModal(false);
+          loadData(); // Recarrega as transações
+        }}
+      />
+      <TransactionDetailsModal
+        visible={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedTransaction(null);
+        }}
+        transaction={selectedTransaction}
+        onDeleteSuccess={() => {
+          setShowDetailsModal(false);
+          setSelectedTransaction(null);
+          loadData(); // Recarrega a lista após excluir
         }}
       />
     </SafeAreaView>

@@ -1,4 +1,3 @@
-// modals/NewExpenseModal.js
 import React, { useState } from "react";
 import {
   Modal,
@@ -23,7 +22,7 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     value: "",
     description: "",
-    date: new Date().toISOString().split("T")[0], // Data atual no formato YYYY-MM-DD
+    date: new Date().toISOString().split("T")[0], 
   });
 
   const handleInputChange = (field, value) => {
@@ -33,12 +32,9 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
     });
   };
 
-  // Formata valor monetário enquanto digita
   const formatCurrencyInput = (text) => {
-    // Remove tudo que não é número
     let numericValue = text.replace(/[^0-9]/g, "");
     
-    // Converte para número com 2 casas decimais
     if (numericValue) {
       const value = (parseInt(numericValue) / 100).toFixed(2);
       return value.replace(".", ",");
@@ -58,7 +54,6 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
   };
 
   const handleSubmit = async () => {
-    // Validações
     if (!formData.value || parseFloat(getNumericValue()) <= 0) {
       Alert.alert("Erro", "Informe um valor válido para a despesa");
       return;
@@ -74,10 +69,10 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
 
       const transactionData = {
         value: getNumericValue(),
-        typeId: 2, // DESPESA - vem da sua tabela Types (id: 2)
+        typeId: 2,
         description: formData.description.trim(),
         date: formData.date,
-        status: true, // Ativa por padrão
+        status: true, 
       };
 
       console.log("📤 Enviando nova despesa:", transactionData);
@@ -97,7 +92,7 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
             text: "OK",
             onPress: () => {
               resetForm();
-              onSuccess(); // Atualiza a lista no HomeScreen
+              onSuccess();
             },
           },
         ]
@@ -127,7 +122,6 @@ export default function NewExpenseModal({ visible, onClose, onSuccess }) {
     onClose();
   };
 
-  // Sugestões de categorias comuns de despesa
   const expenseSuggestions = [
     "Alimentação", "Transporte", "Moradia", "Lazer", 
     "Saúde", "Educação", "Compras", "Serviços"
