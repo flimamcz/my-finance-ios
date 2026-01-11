@@ -14,7 +14,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../theme/colors";
 import { loginRequest } from "../services/auth";
-import { getSession } from "../services/session";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -34,13 +33,11 @@ async function handleLogin() {
 
     console.log("LOGIN RESPONSE:", data);
 
-    // ✅ checagem do backend
     if (data.error) {
       Alert.alert("Erro", data.message || "Login inválido");
       return;
     }
 
-    // ✅ login ok → navega pra Home
     navigation.replace("Home");
   } catch (error) {
     console.log("LOGIN ERROR:", error?.response?.data || error.message);
